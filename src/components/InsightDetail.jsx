@@ -1,13 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 
-const TYPE_PALETTES = {
-  patroon: { bg: '#2D5DA1', text: '#ffffff' },
-  spanning: { bg: '#D4573B', text: '#ffffff' },
-  aanname: { bg: '#F2C94C', text: '#1a1a1a' },
-  kans: { bg: '#4A7C59', text: '#ffffff' },
-};
-
-const FALLBACK = { bg: '#7AB8BF', text: '#1a1a1a' };
+// Same color rotation as InsightCard
+const COLOR_ROTATION = [
+  { bg: '#FFD261', text: '#316956' },
+  { bg: '#316956', text: '#FFD261' },
+  { bg: '#CFEFF8', text: '#DA444E' },
+  { bg: '#DA444E', text: '#CFEFF8' },
+  { bg: '#FFE5E7', text: '#4568AA' },
+  { bg: '#4568AA', text: '#FFE5E7' },
+  { bg: '#DEFFE6', text: '#F88135' },
+  { bg: '#F88135', text: '#DEFFE6' },
+];
 
 const TYPE_LABELS = {
   patroon: 'Patroon',
@@ -16,7 +19,7 @@ const TYPE_LABELS = {
   kans: 'Kans',
 };
 
-export function InsightDetail({ block, cardRect, onClose }) {
+export function InsightDetail({ block, cardRect, cardIndex = 0, onClose }) {
   const [phase, setPhase] = useState('morph'); // morph -> open -> closing
   const contentRef = useRef(null);
 
@@ -39,7 +42,7 @@ export function InsightDetail({ block, cardRect, onClose }) {
 
   if (!block) return null;
 
-  const palette = TYPE_PALETTES[block.type] || FALLBACK;
+  const palette = COLOR_ROTATION[cardIndex % COLOR_ROTATION.length];
 
   // Calculate morph origin styles
   const morphStyle = cardRect && phase === 'morph' ? {

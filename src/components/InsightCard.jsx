@@ -1,13 +1,16 @@
 import { useRef } from 'react';
 
-const TYPE_PALETTES = {
-  patroon: { bg: '#2D5DA1', text: '#ffffff' },
-  spanning: { bg: '#D4573B', text: '#ffffff' },
-  aanname: { bg: '#F2C94C', text: '#1a1a1a' },
-  kans: { bg: '#4A7C59', text: '#ffffff' },
-};
-
-const FALLBACK = { bg: '#7AB8BF', text: '#1a1a1a' };
+// 8-card color rotation: 4 pairs, each light then dark variant
+const COLOR_ROTATION = [
+  { bg: '#FFD261', text: '#316956' },   // 1. Yellow bg, green text
+  { bg: '#316956', text: '#FFD261' },   // 2. Green bg, yellow text
+  { bg: '#CFEFF8', text: '#DA444E' },   // 3. Light blue bg, red text
+  { bg: '#DA444E', text: '#CFEFF8' },   // 4. Red bg, light blue text
+  { bg: '#FFE5E7', text: '#4568AA' },   // 5. Pink bg, blue text
+  { bg: '#4568AA', text: '#FFE5E7' },   // 6. Blue bg, pink text
+  { bg: '#DEFFE6', text: '#F88135' },   // 7. Light green bg, orange text
+  { bg: '#F88135', text: '#DEFFE6' },   // 8. Orange bg, light green text
+];
 
 const TYPE_LABELS = {
   patroon: 'Patroon',
@@ -18,7 +21,7 @@ const TYPE_LABELS = {
 
 export function InsightCard({ block, index, onClick }) {
   const cardRef = useRef(null);
-  const palette = TYPE_PALETTES[block.type] || FALLBACK;
+  const palette = COLOR_ROTATION[index % COLOR_ROTATION.length];
   const hasInspirations = block.inspirations && block.inspirations.length > 0;
 
   function handleClick() {

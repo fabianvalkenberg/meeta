@@ -21,6 +21,7 @@ export default function App() {
   const [showPasteArea, setShowPasteArea] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState(null);
   const [selectedCardRect, setSelectedCardRect] = useState(null);
+  const [selectedCardIndex, setSelectedCardIndex] = useState(0);
   const [showTranscript, setShowTranscript] = useState(false);
   const [showMeta, setShowMeta] = useState(false);
 
@@ -172,7 +173,7 @@ export default function App() {
           {blocks.length > 0 ? (
             <div className="insights-grid">
               {blocks.map((block, i) => (
-                <InsightCard key={`${block.type}-${i}`} block={block} index={i} onClick={(b, rect) => { setSelectedBlock(b); setSelectedCardRect(rect); }} />
+                <InsightCard key={`${block.type}-${i}`} block={block} index={i} onClick={(b, rect) => { setSelectedBlock(b); setSelectedCardRect(rect); setSelectedCardIndex(i); }} />
               ))}
             </div>
           ) : !isAnalyzing ? (
@@ -204,6 +205,7 @@ export default function App() {
         <InsightDetail
           block={selectedBlock}
           cardRect={selectedCardRect}
+          cardIndex={selectedCardIndex}
           onClose={() => { setSelectedBlock(null); setSelectedCardRect(null); }}
         />
       )}
