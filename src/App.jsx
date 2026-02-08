@@ -116,17 +116,24 @@ export default function App() {
         <main className="main">
           {error && <div className="error-banner">{error}</div>}
 
+          {isAnalyzing && (
+            <div className="analyzing-progress">
+              <div className="analyzing-progress-bar" />
+              <span className="analyzing-progress-text">Analyseren...</span>
+            </div>
+          )}
+
           {blocks.length > 0 ? (
             <div className="insights-grid">
               {blocks.map((block, i) => (
                 <InsightCard key={`${block.type}-${i}`} block={block} index={i} />
               ))}
             </div>
-          ) : (
+          ) : !isAnalyzing ? (
             <div className="empty-state">
               <MeetaLogo className="empty-logo" />
             </div>
-          )}
+          ) : null}
         </main>
       </div>
     </div>

@@ -1,44 +1,34 @@
-const TYPE_CONFIG = {
-  patroon: {
-    label: 'Patroon',
-    color: '#a855f7',
-    bg: 'rgba(168, 85, 247, 0.08)',
-    border: 'rgba(168, 85, 247, 0.25)',
-  },
-  spanning: {
-    label: 'Spanning',
-    color: '#eab308',
-    bg: 'rgba(234, 179, 8, 0.08)',
-    border: 'rgba(234, 179, 8, 0.25)',
-  },
-  aanname: {
-    label: 'Aanname',
-    color: '#ef4444',
-    bg: 'rgba(239, 68, 68, 0.08)',
-    border: 'rgba(239, 68, 68, 0.25)',
-  },
-  kans: {
-    label: 'Kans',
-    color: '#22c55e',
-    bg: 'rgba(34, 197, 94, 0.08)',
-    border: 'rgba(34, 197, 94, 0.25)',
-  },
+const TYPE_PALETTES = {
+  patroon: { bg: '#2D5DA1', text: '#ffffff' },
+  spanning: { bg: '#D4573B', text: '#ffffff' },
+  aanname: { bg: '#F2C94C', text: '#1a1a1a' },
+  kans: { bg: '#4A7C59', text: '#ffffff' },
 };
 
-export function InsightCard({ block }) {
-  const config = TYPE_CONFIG[block.type] || TYPE_CONFIG.patroon;
+const FALLBACK = { bg: '#7AB8BF', text: '#1a1a1a' };
+
+const TYPE_LABELS = {
+  patroon: 'Patroon',
+  spanning: 'Spanning',
+  aanname: 'Aanname',
+  kans: 'Kans',
+};
+
+export function InsightCard({ block, index }) {
+  const palette = TYPE_PALETTES[block.type] || FALLBACK;
 
   return (
     <div
       className="insight-card"
       style={{
-        background: config.bg,
-        borderColor: config.border,
+        backgroundColor: palette.bg,
+        color: palette.text,
+        animationDelay: `${index * 0.08}s`,
       }}
     >
-      <div className="insight-header">
-        <span className="insight-badge" style={{ background: config.color }}>
-          {config.label}
+      <div className="insight-card-top">
+        <span className="insight-type">
+          {TYPE_LABELS[block.type] || block.type}
         </span>
         <h3 className="insight-title">{block.title}</h3>
       </div>
