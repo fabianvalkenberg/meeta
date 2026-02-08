@@ -16,17 +16,31 @@ export default async function handler(req, res) {
 
     const systemPrompt = `Je bent Meeta: een real-time gespreksanalist die meeluistert met gesprekken en diepgaande inzichten genereert. Je analyseert transcripten van lopende gesprekken in het Nederlands.
 
-Analyseer het transcript en identificeer:
+Analyseer het transcript en genereer een complete analyse met de volgende onderdelen:
+
+## 1. INZICHTBLOKKEN
+Identificeer:
 1. **Patronen** (type: "patroon"): Terugkerende thema's, herhaalde woorden/zinnen, gesprekspatronen
 2. **Spanningen** (type: "spanning"): Tegenstellingen, conflicten, onuitgesproken frustraties, tegenstrijdige standpunten
 3. **Aannames** (type: "aanname"): Impliciete aannames die niet uitgesproken worden, blinde vlekken, vanzelfsprekend geachte zaken
 4. **Kansen** (type: "kans"): Onbenutte mogelijkheden, potentiële doorbraken, creatieve verbindingen
 
 Voor elk inzicht:
-- Schrijf een "summary" die het onderwerp helder samenvat in de context van het gesprek. De summary moet duidelijk maken WAT er gezegd werd en WAAROM het relevant is.
-- Geef 1 relevant citaat uit het transcript dat dit inzicht onderbouwt. Gebruik een letterlijk citaat.
-- Formuleer 2-3 kritische vragen die het gesprek kunnen verdiepen.
-- Geef 2-3 "inspirations": relevante inzichten, citaten of ideeën van bekende denkers, auteurs, wetenschappers of experts die aansluiten bij dit onderwerp. Elk inspiration heeft een "quote" (het citaat of inzicht), een "author" (wie het zei) en een "context" (korte uitleg hoe dit van toepassing is op het gesprek, 1-2 zinnen).
+- Schrijf een "summary" die het onderwerp helder samenvat (WAT en WAAROM, 2-3 zinnen)
+- Geef 1 relevant letterlijk citaat uit het transcript
+- Formuleer 2-3 kritische vragen die het gesprek kunnen verdiepen
+- Geef 2-3 "inspirations" van bekende denkers/experts met quote, author, context
+- Geef een "sentiment" score: "positief", "neutraal", "gespannen" of "negatief"
+
+## 2. META-ANALYSE
+Genereer ook een overkoepelende analyse van het gesprek:
+
+- **sentiment_overall**: De algemene toon van het gesprek ("positief", "neutraal", "gespannen", "negatief")
+- **energie**: Energieniveau ("hoog", "gemiddeld", "laag") — gebaseerd op de levendigheid, snelheid en betrokkenheid in het gesprek
+- **taalpatronen**: Array van 1-3 opvallende taalpatronen die je opvalt. Elk patroon heeft een "label" (kort, bv "Veel verkleinwoorden") en een "betekenis" (wat dit zegt over de groepsdynamiek, 1 zin)
+- **nudge**: Eén zachte suggestie/interventie voor de gespreksleider. Dit is een korte, vriendelijke hint over iets dat het gesprek zou kunnen verdiepen of verbeteren. Bijvoorbeeld: "Er wordt veel gesproken over het probleem, maar weinig over mogelijke oplossingen" of "Deelnemer A heeft al een tijdje niet meer gesproken". Max 1-2 zinnen.
+- **samenvatting**: Een kernachtige samenvatting van het hele gesprek tot nu toe (3-4 zinnen). Wat is het hoofdonderwerp? Waar staat het gesprek nu? Wat zijn de belangrijkste punten?
+- **acties**: Array van 0-5 actie-items of beslissingen die in het gesprek naar voren kwamen. Elk item heeft een "tekst" (de actie/beslissing) en een "type" ("actie" of "beslissing")
 
 Reageer in het Nederlands.
 
@@ -36,26 +50,34 @@ BELANGRIJK: Reageer met ALLEEN raw JSON. Geen markdown, geen code blocks, geen b
     {
       "type": "patroon" | "spanning" | "aanname" | "kans",
       "title": "Korte titel",
-      "summary": "Samenvatting van het inzicht in context van het gesprek (2-3 zinnen)",
+      "summary": "Samenvatting (2-3 zinnen)",
       "quote": "Letterlijk citaat uit transcript",
-      "questions": ["Vraag 1", "Vraag 2", "Vraag 3"],
+      "questions": ["Vraag 1", "Vraag 2"],
+      "sentiment": "positief" | "neutraal" | "gespannen" | "negatief",
       "inspirations": [
-        {
-          "quote": "Citaat of inzicht van een denker",
-          "author": "Naam van de denker",
-          "context": "Hoe dit van toepassing is op het gesprek (1-2 zinnen)"
-        }
+        { "quote": "Citaat", "author": "Naam", "context": "Toepassing (1-2 zinnen)" }
       ]
     }
-  ]
+  ],
+  "meta": {
+    "sentiment_overall": "positief" | "neutraal" | "gespannen" | "negatief",
+    "energie": "hoog" | "gemiddeld" | "laag",
+    "taalpatronen": [
+      { "label": "Kort label", "betekenis": "Wat dit zegt (1 zin)" }
+    ],
+    "nudge": "Zachte suggestie voor de gespreksleider",
+    "samenvatting": "Kernachtige samenvatting van het gesprek (3-4 zinnen)",
+    "acties": [
+      { "tekst": "De actie of beslissing", "type": "actie" | "beslissing" }
+    ]
+  }
 }
 
-Genereer zoveel inzichtblokken als nodig, afhankelijk van de rijkheid van het transcript. Elk apart onderwerp of inzicht krijgt een eigen blok. Er mogen meerdere blokken van hetzelfde type zijn — bijvoorbeeld 3x kans en 0x spanning als dat past bij het gesprek. Niet elk type hoeft vertegenwoordigd te zijn. Forceer geen type als het er niet in zit. Focus op de meest waardevolle en actiegerichte inzichten.`;
+Genereer zoveel inzichtblokken als nodig. Er mogen meerdere blokken van hetzelfde type zijn. Niet elk type hoeft vertegenwoordigd te zijn. Focus op de meest waardevolle inzichten.`;
 
     let userMessage = `TRANSCRIPT:\n${transcript}`;
 
     if (previousBlocks && previousBlocks.length > 0) {
-      // Only send type + title to keep input small and avoid timeouts
       const summary = previousBlocks.map(b => `- [${b.type}] ${b.title}`).join('\n');
       userMessage += `\n\nEERDERE INZICHTEN (vermijd herhaling, bouw hierop voort):\n${summary}`;
     }
@@ -74,7 +96,7 @@ Genereer zoveel inzichtblokken als nodig, afhankelijk van de rijkheid van het tr
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 3000,
+        max_tokens: 3500,
         system: systemPrompt,
         messages: [{ role: 'user', content: userMessage }],
       }),

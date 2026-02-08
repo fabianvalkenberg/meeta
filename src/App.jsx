@@ -4,6 +4,7 @@ import { useAnalysis } from './hooks/useAnalysis';
 import { TranscriptPanel } from './components/TranscriptPanel';
 import { InsightCard } from './components/InsightCard';
 import { InsightDetail } from './components/InsightDetail';
+import { MetaPanel } from './components/MetaPanel';
 
 export default function App() {
   const {
@@ -15,7 +16,7 @@ export default function App() {
     stopListening,
   } = useSpeechRecognition();
 
-  const { blocks, isAnalyzing, error, analyzeText, countdown } = useAnalysis(transcript, isListening);
+  const { blocks, meta, metaHistory, isAnalyzing, error, analyzeText, countdown } = useAnalysis(transcript, isListening);
   const [pastedText, setPastedText] = useState('');
   const [showPasteArea, setShowPasteArea] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState(null);
@@ -129,6 +130,8 @@ export default function App() {
               <span className="analyzing-progress-text">Analyseren...</span>
             </div>
           )}
+
+          <MetaPanel meta={meta} metaHistory={metaHistory} blocks={blocks} />
 
           {blocks.length > 0 ? (
             <div className="insights-grid">

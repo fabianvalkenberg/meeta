@@ -5,6 +5,8 @@ const AUTO_INTERVAL = 45;
 
 export function useAnalysis(transcript, isListening) {
   const [blocks, setBlocks] = useState([]);
+  const [meta, setMeta] = useState(null);
+  const [metaHistory, setMetaHistory] = useState([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState(null);
   const [countdown, setCountdown] = useState(AUTO_INTERVAL);
@@ -52,6 +54,11 @@ export function useAnalysis(transcript, isListening) {
         setBlocks((prev) => [...data.blocks, ...prev]);
         lastAnalyzedRef.current = currentTranscript;
       }
+
+      if (data.meta) {
+        setMeta(data.meta);
+        setMetaHistory((prev) => [...prev, { ...data.meta, timestamp: Date.now() }]);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -87,5 +94,5 @@ export function useAnalysis(transcript, isListening) {
     };
   }, [isListening, analyzeText]);
 
-  return { blocks, isAnalyzing, error, analyzeText, countdown };
+  return { blocks, meta, metaHistory, isAnalyzing, error, analyzeText, countdown };
 }
