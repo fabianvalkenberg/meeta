@@ -1,3 +1,5 @@
+import { useRef } from 'react';
+
 const TYPE_PALETTES = {
   patroon: { bg: '#2D5DA1', text: '#ffffff' },
   spanning: { bg: '#D4573B', text: '#ffffff' },
@@ -15,18 +17,26 @@ const TYPE_LABELS = {
 };
 
 export function InsightCard({ block, index, onClick }) {
+  const cardRef = useRef(null);
   const palette = TYPE_PALETTES[block.type] || FALLBACK;
   const hasInspirations = block.inspirations && block.inspirations.length > 0;
 
+  function handleClick() {
+    if (!hasInspirations) return;
+    const rect = cardRef.current?.getBoundingClientRect();
+    onClick(block, rect);
+  }
+
   return (
     <div
+      ref={cardRef}
       className={`insight-card ${hasInspirations ? 'insight-card--clickable' : ''}`}
       style={{
         backgroundColor: palette.bg,
         color: palette.text,
-        animationDelay: `${index * 0.08}s`,
+        animationDelay: `${index * 0.12}s`,
       }}
-      onClick={hasInspirations ? () => onClick(block) : undefined}
+      onClick={handleClick}
     >
       <div className="insight-card-top">
         <span className="insight-type">
