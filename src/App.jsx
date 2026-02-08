@@ -21,6 +21,8 @@ export default function App() {
   const [showPasteArea, setShowPasteArea] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState(null);
   const [selectedCardRect, setSelectedCardRect] = useState(null);
+  const [showTranscript, setShowTranscript] = useState(false);
+  const [showMeta, setShowMeta] = useState(false);
 
   async function handlePasteAnalyze() {
     const text = pastedText.trim();
@@ -48,79 +50,115 @@ export default function App() {
 
   return (
     <div className="app">
-      <div className="layout">
-        <aside className="sidebar">
-          <header className="header">
-            <MeetaLogo className="logo-img" />
-          </header>
+      {/* Top bar: toggle buttons + centered logo */}
+      <header className="topbar">
+        <button
+          className={`panel-toggle panel-toggle--left ${showTranscript ? 'panel-toggle--active' : ''}`}
+          onClick={() => setShowTranscript(!showTranscript)}
+          title="Transcript"
+        >
+          <TranscriptIcon />
+          <span className="panel-toggle-label">Transcript</span>
+        </button>
 
-          <div className="sidebar-controls">
-            <div className="controls-row">
-              <button
-                className="btn btn-paste-toggle"
-                onClick={() => setShowPasteArea(!showPasteArea)}
-                title="Plak transcript"
-              >
-                <PasteIcon />
+        <div className="topbar-center">
+          <MeetaLogo className="logo-img-large" />
+        </div>
+
+        <button
+          className={`panel-toggle panel-toggle--right ${showMeta ? 'panel-toggle--active' : ''}`}
+          onClick={() => setShowMeta(!showMeta)}
+          title="Gespreksoverzicht"
+        >
+          <span className="panel-toggle-label">Overzicht</span>
+          <MetaIcon />
+        </button>
+      </header>
+
+      {/* Three-zone layout */}
+      <div className="layout-body">
+        {/* Left panel — transcript */}
+        <aside className={`panel-left ${showTranscript ? 'panel-left--open' : ''}`}>
+          <div className="panel-left-inner">
+            <div className="panel-left-header">
+              <h2 className="panel-left-title">Transcript</h2>
+              <button className="panel-close-btn" onClick={() => setShowTranscript(false)}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
               </button>
-              {isListening ? (
-                <button className="btn btn-stop" onClick={stopListening}>
-                  <StopIcon /> Stop
+            </div>
+
+            <div className="sidebar-controls">
+              <div className="controls-row">
+                <button
+                  className="btn btn-paste-toggle"
+                  onClick={() => setShowPasteArea(!showPasteArea)}
+                  title="Plak transcript"
+                >
+                  <PasteIcon />
                 </button>
-              ) : (
-                <button className="btn btn-start" onClick={startListening}>
-                  <MicIcon /> Start
-                </button>
+                {isListening ? (
+                  <button className="btn btn-stop" onClick={stopListening}>
+                    <StopIcon /> Stop
+                  </button>
+                ) : (
+                  <button className="btn btn-start" onClick={startListening}>
+                    <MicIcon /> Start
+                  </button>
+                )}
+              </div>
+
+              {showPasteArea && (
+                <div className="paste-area">
+                  <textarea
+                    className="paste-textarea"
+                    placeholder="Plak hier een transcript..."
+                    value={pastedText}
+                    onChange={(e) => setPastedText(e.target.value)}
+                    rows={5}
+                  />
+                  <div className="paste-actions">
+                    <button
+                      className="btn btn-start"
+                      onClick={handlePasteAnalyze}
+                      disabled={!pastedText.trim() || isAnalyzing}
+                    >
+                      {isAnalyzing ? 'Analyseren...' : 'Analyseer'}
+                    </button>
+                    <button
+                      className="btn"
+                      onClick={() => { setPastedText(''); setShowPasteArea(false); }}
+                    >
+                      Annuleer
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
 
-            {showPasteArea && (
-              <div className="paste-area">
-                <textarea
-                  className="paste-textarea"
-                  placeholder="Plak hier een transcript..."
-                  value={pastedText}
-                  onChange={(e) => setPastedText(e.target.value)}
-                  rows={5}
+            {isListening && (
+              <div className="countdown-bar">
+                <div
+                  className="countdown-progress"
+                  style={{ width: `${((45 - countdown) / 45) * 100}%` }}
                 />
-                <div className="paste-actions">
-                  <button
-                    className="btn btn-start"
-                    onClick={handlePasteAnalyze}
-                    disabled={!pastedText.trim() || isAnalyzing}
-                  >
-                    {isAnalyzing ? 'Analyseren...' : 'Analyseer'}
-                  </button>
-                  <button
-                    className="btn"
-                    onClick={() => { setPastedText(''); setShowPasteArea(false); }}
-                  >
-                    Annuleer
-                  </button>
-                </div>
+                <span className="countdown-text">
+                  {isAnalyzing ? 'Analyseren...' : `Analyse over ${countdown}s`}
+                </span>
               </div>
             )}
+
+            <TranscriptPanel
+              transcript={displayTranscript}
+              interimText={interimText}
+              isListening={isListening}
+            />
           </div>
-
-          {isListening && (
-            <div className="countdown-bar">
-              <div
-                className="countdown-progress"
-                style={{ width: `${((45 - countdown) / 45) * 100}%` }}
-              />
-              <span className="countdown-text">
-                {isAnalyzing ? 'Analyseren...' : `Analyse over ${countdown}s`}
-              </span>
-            </div>
-          )}
-
-          <TranscriptPanel
-            transcript={displayTranscript}
-            interimText={interimText}
-            isListening={isListening}
-          />
         </aside>
 
+        {/* Main content — cards */}
         <main className="main">
           {error && <div className="error-banner">{error}</div>}
 
@@ -130,8 +168,6 @@ export default function App() {
               <span className="analyzing-progress-text">Analyseren...</span>
             </div>
           )}
-
-          <MetaPanel meta={meta} metaHistory={metaHistory} blocks={blocks} />
 
           {blocks.length > 0 ? (
             <div className="insights-grid">
@@ -145,7 +181,24 @@ export default function App() {
             </div>
           ) : null}
         </main>
+
+        {/* Right panel — meta/overview */}
+        <MetaPanel
+          meta={meta}
+          metaHistory={metaHistory}
+          blocks={blocks}
+          isOpen={showMeta}
+          onToggle={() => setShowMeta(false)}
+        />
       </div>
+
+      {/* Panel overlays for mobile */}
+      {(showTranscript || showMeta) && (
+        <div
+          className="panel-backdrop"
+          onClick={() => { setShowTranscript(false); setShowMeta(false); }}
+        />
+      )}
 
       {selectedBlock && (
         <InsightDetail
@@ -194,6 +247,28 @@ function PasteIcon() {
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
       <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+    </svg>
+  );
+}
+
+function TranscriptIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+      <line x1="16" y1="13" x2="8" y2="13" />
+      <line x1="16" y1="17" x2="8" y2="17" />
+      <polyline points="10 9 9 9 8 9" />
+    </svg>
+  );
+}
+
+function MetaIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+      <line x1="12" y1="22.08" x2="12" y2="12" />
     </svg>
   );
 }
