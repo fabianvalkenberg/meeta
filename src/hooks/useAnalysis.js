@@ -1,19 +1,31 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 
 const API_URL = '/api/analyze';
-const AUTO_INTERVAL = 45_000;
+const AUTO_INTERVAL = 45;
 
 export function useAnalysis(transcript, isListening) {
   const [blocks, setBlocks] = useState([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState(null);
+  const [countdown, setCountdown] = useState(AUTO_INTERVAL);
   const lastAnalyzedRef = useRef('');
   const intervalRef = useRef(null);
+  const countdownRef = useRef(null);
+  const transcriptRef = useRef(transcript);
+  const blocksRef = useRef(blocks);
 
-  const analyze = useCallback(async () => {
-    const currentTranscript = transcript.trim();
+  transcriptRef.current = transcript;
+  blocksRef.current = blocks;
 
-    if (!currentTranscript || currentTranscript === lastAnalyzedRef.current) {
+  const analyzeText = useCallback(async (text) => {
+    const currentTranscript = (text || transcriptRef.current).trim();
+
+    if (!currentTranscript) {
+      return;
+    }
+
+    // Only skip duplicate check for auto-analysis (no explicit text passed)
+    if (!text && currentTranscript === lastAnalyzedRef.current) {
       return;
     }
 
@@ -26,7 +38,7 @@ export function useAnalysis(transcript, isListening) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           transcript: currentTranscript,
-          previousBlocks: blocks,
+          previousBlocks: blocksRef.current,
         }),
       });
 
@@ -44,26 +56,36 @@ export function useAnalysis(transcript, isListening) {
       setError(err.message);
     } finally {
       setIsAnalyzing(false);
+      setCountdown(AUTO_INTERVAL);
     }
-  }, [transcript, blocks]);
-
-  // Auto-analyze every 45 seconds while listening
-  useEffect(() => {
-    if (isListening) {
-      intervalRef.current = setInterval(() => {
-        analyze();
-      }, AUTO_INTERVAL);
-    } else {
-      clearInterval(intervalRef.current);
-    }
-
-    return () => clearInterval(intervalRef.current);
-  }, [isListening, analyze]);
-
-  const clearBlocks = useCallback(() => {
-    setBlocks([]);
-    lastAnalyzedRef.current = '';
   }, []);
 
-  return { blocks, isAnalyzing, error, analyze, clearBlocks };
+  // Auto-analyze + countdown while listening
+  useEffect(() => {
+    if (isListening) {
+      setCountdown(AUTO_INTERVAL);
+
+      countdownRef.current = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            return AUTO_INTERVAL;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      intervalRef.current = setInterval(() => analyzeText(), AUTO_INTERVAL * 1000);
+    } else {
+      clearInterval(intervalRef.current);
+      clearInterval(countdownRef.current);
+      setCountdown(AUTO_INTERVAL);
+    }
+
+    return () => {
+      clearInterval(intervalRef.current);
+      clearInterval(countdownRef.current);
+    };
+  }, [isListening, analyzeText]);
+
+  return { blocks, isAnalyzing, error, analyzeText, countdown };
 }

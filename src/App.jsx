@@ -22,9 +22,10 @@ export default function App() {
 
   async function handlePasteAnalyze() {
     const text = pastedText.trim();
-    if (!text) return;
+    if (!text || isAnalyzing) return;
     await analyzeText(text);
     setShowPasteArea(false);
+    setPastedText('');
   }
 
   const displayTranscript = pastedText || transcript;
