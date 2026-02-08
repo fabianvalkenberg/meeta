@@ -54,12 +54,11 @@ export default function App() {
       {/* Top bar: toggle buttons + centered logo */}
       <header className="topbar">
         <button
-          className={`panel-toggle panel-toggle--left ${showTranscript ? 'panel-toggle--active' : ''}`}
+          className={`panel-toggle ${showTranscript ? 'panel-toggle--active' : ''}`}
           onClick={() => setShowTranscript(!showTranscript)}
           title="Transcript"
         >
           <TranscriptIcon />
-          <span className="panel-toggle-label">Transcript</span>
         </button>
 
         <div className="topbar-center">
@@ -67,11 +66,10 @@ export default function App() {
         </div>
 
         <button
-          className={`panel-toggle panel-toggle--right ${showMeta ? 'panel-toggle--active' : ''}`}
+          className={`panel-toggle ${showMeta ? 'panel-toggle--active' : ''}`}
           onClick={() => setShowMeta(!showMeta)}
           title="Gespreksoverzicht"
         >
-          <span className="panel-toggle-label">Overzicht</span>
           <MetaIcon />
         </button>
       </header>
@@ -164,9 +162,15 @@ export default function App() {
           {error && <div className="error-banner">{error}</div>}
 
           {isAnalyzing && (
-            <div className="analyzing-progress">
-              <div className="analyzing-progress-bar" />
-              <span className="analyzing-progress-text">Analyseren...</span>
+            <div className="analyzing-loader">
+              <div className="loader-pill-wrap">
+                <svg className="loader-pill" viewBox="0 0 415 155" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M336.955 0L337.956 0.00585938C380.296 0.541931 414.454 35.0324 414.454 77.5C414.454 119.967 380.296 154.457 337.956 154.993L336.955 154.999H74.1299V154.926C32.8915 153.162 0.00020075 119.173 0 77.5C0 35.8272 32.8914 1.83652 74.1299 0.0722656V0H336.955Z" fill="#EBFF00" opacity="0.25"/>
+                </svg>
+                <div className="loader-orbit">
+                  <div className="loader-dot" />
+                </div>
+              </div>
             </div>
           )}
 
@@ -255,7 +259,7 @@ function PasteIcon() {
 
 function TranscriptIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
       <polyline points="14 2 14 8 20 8" />
       <line x1="16" y1="13" x2="8" y2="13" />
@@ -267,7 +271,7 @@ function TranscriptIcon() {
 
 function MetaIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
       <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
       <line x1="12" y1="22.08" x2="12" y2="12" />
