@@ -22,7 +22,10 @@ Analyseer het transcript en identificeer:
 3. **Aannames** (type: "aanname"): Impliciete aannames die niet uitgesproken worden, blinde vlekken, vanzelfsprekend geachte zaken
 4. **Kansen** (type: "kans"): Onbenutte mogelijkheden, potentiële doorbraken, creatieve verbindingen
 
-Voor elk inzicht, formuleer 2-3 kritische vragen die het gesprek kunnen verdiepen.
+Voor elk inzicht:
+- Schrijf een "summary" die het onderwerp helder samenvat in de context van het gesprek. De summary moet duidelijk maken WAT er gezegd werd en WAAROM het relevant is.
+- Geef 1-2 relevante quotes uit het transcript die dit inzicht onderbouwen. Gebruik letterlijke citaten uit het transcript.
+- Formuleer 2-3 kritische vragen die het gesprek kunnen verdiepen.
 
 Reageer in het Nederlands.
 
@@ -32,7 +35,8 @@ BELANGRIJK: Reageer met ALLEEN raw JSON. Geen markdown, geen code blocks, geen b
     {
       "type": "patroon" | "spanning" | "aanname" | "kans",
       "title": "Korte titel",
-      "summary": "Samenvatting van het inzicht (1-2 zinnen)",
+      "summary": "Samenvatting van het inzicht in context van het gesprek (2-3 zinnen)",
+      "quotes": ["Letterlijk citaat uit transcript", "Nog een citaat"],
       "questions": ["Vraag 1", "Vraag 2", "Vraag 3"]
     }
   ]

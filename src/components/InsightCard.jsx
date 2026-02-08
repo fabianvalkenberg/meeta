@@ -33,6 +33,15 @@ export function InsightCard({ block, index }) {
         <h3 className="insight-title">{block.title}</h3>
       </div>
       <p className="insight-summary">{block.summary}</p>
+      {block.quotes && block.quotes.length > 0 && (
+        <div className="insight-quotes">
+          {block.quotes.map((quote, i) => (
+            <blockquote key={i} className="insight-quote">
+              {quote}
+            </blockquote>
+          ))}
+        </div>
+      )}
       {block.questions && block.questions.length > 0 && (
         <ul className="insight-questions">
           {block.questions.map((q, i) => (
