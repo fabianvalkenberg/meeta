@@ -24,8 +24,9 @@ Analyseer het transcript en identificeer:
 
 Voor elk inzicht:
 - Schrijf een "summary" die het onderwerp helder samenvat in de context van het gesprek. De summary moet duidelijk maken WAT er gezegd werd en WAAROM het relevant is.
-- Geef 1-2 relevante quotes uit het transcript die dit inzicht onderbouwen. Gebruik letterlijke citaten uit het transcript.
+- Geef 1 relevant citaat uit het transcript dat dit inzicht onderbouwt. Gebruik een letterlijk citaat.
 - Formuleer 2-3 kritische vragen die het gesprek kunnen verdiepen.
+- Geef 2-3 "inspirations": relevante inzichten, citaten of ideeën van bekende denkers, auteurs, wetenschappers of experts die aansluiten bij dit onderwerp. Elk inspiration heeft een "quote" (het citaat of inzicht), een "author" (wie het zei) en een "context" (korte uitleg hoe dit van toepassing is op het gesprek, 1-2 zinnen).
 
 Reageer in het Nederlands.
 
@@ -36,8 +37,15 @@ BELANGRIJK: Reageer met ALLEEN raw JSON. Geen markdown, geen code blocks, geen b
       "type": "patroon" | "spanning" | "aanname" | "kans",
       "title": "Korte titel",
       "summary": "Samenvatting van het inzicht in context van het gesprek (2-3 zinnen)",
-      "quotes": ["Letterlijk citaat uit transcript", "Nog een citaat"],
-      "questions": ["Vraag 1", "Vraag 2", "Vraag 3"]
+      "quote": "Letterlijk citaat uit transcript",
+      "questions": ["Vraag 1", "Vraag 2", "Vraag 3"],
+      "inspirations": [
+        {
+          "quote": "Citaat of inzicht van een denker",
+          "author": "Naam van de denker",
+          "context": "Hoe dit van toepassing is op het gesprek (1-2 zinnen)"
+        }
+      ]
     }
   ]
 }
@@ -64,7 +72,7 @@ Genereer zoveel inzichtblokken als nodig, afhankelijk van de rijkheid van het tr
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 2048,
+        max_tokens: 4096,
         system: systemPrompt,
         messages: [{ role: 'user', content: userMessage }],
       }),

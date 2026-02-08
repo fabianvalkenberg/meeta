@@ -3,6 +3,7 @@ import { useSpeechRecognition } from './hooks/useSpeechRecognition';
 import { useAnalysis } from './hooks/useAnalysis';
 import { TranscriptPanel } from './components/TranscriptPanel';
 import { InsightCard } from './components/InsightCard';
+import { InsightDetail } from './components/InsightDetail';
 
 export default function App() {
   const {
@@ -17,6 +18,7 @@ export default function App() {
   const { blocks, isAnalyzing, error, analyzeText, countdown } = useAnalysis(transcript, isListening);
   const [pastedText, setPastedText] = useState('');
   const [showPasteArea, setShowPasteArea] = useState(false);
+  const [selectedBlock, setSelectedBlock] = useState(null);
 
   async function handlePasteAnalyze() {
     const text = pastedText.trim();
@@ -126,7 +128,7 @@ export default function App() {
           {blocks.length > 0 ? (
             <div className="insights-grid">
               {blocks.map((block, i) => (
-                <InsightCard key={`${block.type}-${i}`} block={block} index={i} />
+                <InsightCard key={`${block.type}-${i}`} block={block} index={i} onClick={setSelectedBlock} />
               ))}
             </div>
           ) : !isAnalyzing ? (
@@ -136,6 +138,13 @@ export default function App() {
           ) : null}
         </main>
       </div>
+
+      {selectedBlock && (
+        <InsightDetail
+          block={selectedBlock}
+          onClose={() => setSelectedBlock(null)}
+        />
+      )}
     </div>
   );
 }

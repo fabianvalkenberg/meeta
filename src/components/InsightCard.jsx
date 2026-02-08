@@ -14,17 +14,19 @@ const TYPE_LABELS = {
   kans: 'Kans',
 };
 
-export function InsightCard({ block, index }) {
+export function InsightCard({ block, index, onClick }) {
   const palette = TYPE_PALETTES[block.type] || FALLBACK;
+  const hasInspirations = block.inspirations && block.inspirations.length > 0;
 
   return (
     <div
-      className="insight-card"
+      className={`insight-card ${hasInspirations ? 'insight-card--clickable' : ''}`}
       style={{
         backgroundColor: palette.bg,
         color: palette.text,
         animationDelay: `${index * 0.08}s`,
       }}
+      onClick={hasInspirations ? () => onClick(block) : undefined}
     >
       <div className="insight-card-top">
         <span className="insight-type">
@@ -33,14 +35,10 @@ export function InsightCard({ block, index }) {
         <h3 className="insight-title">{block.title}</h3>
       </div>
       <p className="insight-summary">{block.summary}</p>
-      {block.quotes && block.quotes.length > 0 && (
-        <div className="insight-quotes">
-          {block.quotes.map((quote, i) => (
-            <blockquote key={i} className="insight-quote">
-              {quote}
-            </blockquote>
-          ))}
-        </div>
+      {block.quote && (
+        <blockquote className="insight-quote">
+          {block.quote}
+        </blockquote>
       )}
       {block.questions && block.questions.length > 0 && (
         <ul className="insight-questions">
@@ -48,6 +46,18 @@ export function InsightCard({ block, index }) {
             <li key={i}>{q}</li>
           ))}
         </ul>
+      )}
+      {hasInspirations && (
+        <div className="insight-inspirations-hint">
+          <span className="inspirations-hint-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+          </span>
+          {block.inspirations.length} inspiratie{block.inspirations.length !== 1 ? 's' : ''} van anderen
+        </div>
       )}
     </div>
   );
