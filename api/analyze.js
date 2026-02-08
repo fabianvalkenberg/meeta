@@ -55,7 +55,9 @@ Genereer zoveel inzichtblokken als nodig, afhankelijk van de rijkheid van het tr
     let userMessage = `TRANSCRIPT:\n${transcript}`;
 
     if (previousBlocks && previousBlocks.length > 0) {
-      userMessage += `\n\nEERDERE INZICHTEN (vermijd herhaling, bouw hierop voort):\n${JSON.stringify(previousBlocks, null, 2)}`;
+      // Only send type + title to keep input small and avoid timeouts
+      const summary = previousBlocks.map(b => `- [${b.type}] ${b.title}`).join('\n');
+      userMessage += `\n\nEERDERE INZICHTEN (vermijd herhaling, bouw hierop voort):\n${summary}`;
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -72,7 +74,7 @@ Genereer zoveel inzichtblokken als nodig, afhankelijk van de rijkheid van het tr
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 4096,
+        max_tokens: 3000,
         system: systemPrompt,
         messages: [{ role: 'user', content: userMessage }],
       }),
