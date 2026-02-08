@@ -18,10 +18,10 @@ export default function App() {
   const [pastedText, setPastedText] = useState('');
   const [showPasteArea, setShowPasteArea] = useState(false);
 
-  function handlePasteAnalyze() {
+  async function handlePasteAnalyze() {
     const text = pastedText.trim();
     if (!text) return;
-    analyzeText(text);
+    await analyzeText(text);
     setShowPasteArea(false);
   }
 
@@ -80,9 +80,9 @@ export default function App() {
                 <button
                   className="btn btn-start"
                   onClick={handlePasteAnalyze}
-                  disabled={!pastedText.trim()}
+                  disabled={!pastedText.trim() || isAnalyzing}
                 >
-                  Analyseer
+                  {isAnalyzing ? 'Analyseren...' : 'Analyseer'}
                 </button>
                 <button
                   className="btn"
