@@ -8,10 +8,11 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { email, password } = req.body || {};
+    const { email, username, password } = req.body || {};
+    const login = email || username;
 
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email en wachtwoord zijn verplicht' });
+    if (!login || !password) {
+      return res.status(400).json({ error: 'Gebruikersnaam en wachtwoord zijn verplicht' });
     }
 
     let sql;
@@ -22,9 +23,10 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Database verbinding mislukt' });
     }
 
+    const loginLower = login.toLowerCase().trim();
     let rows;
     try {
-      rows = await sql`SELECT id, email, display_name, password_hash, is_active FROM users WHERE email = ${email.toLowerCase().trim()}`;
+      rows = await sql`SELECT id, email, username, display_name, password_hash, is_active FROM users WHERE email = ${loginLower} OR username = ${loginLower}`;
     } catch (queryErr) {
       console.error('Query error:', queryErr);
       return res.status(500).json({ error: 'Database query mislukt: ' + queryErr.message });
@@ -42,7 +44,7 @@ export default async function handler(req, res) {
 
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) {
-      return res.status(401).json({ error: 'Onjuist e-mailadres of wachtwoord' });
+      return res.status(401).json({ error: 'Onjuiste gebruikersnaam of wachtwoord' });
     }
 
     const token = await signToken(user.id);

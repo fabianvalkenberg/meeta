@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 export function LoginScreen() {
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -14,7 +14,7 @@ export function LoginScreen() {
     setIsSubmitting(true);
 
     try {
-      await login(email, password);
+      await login(username, password);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -39,13 +39,13 @@ export function LoginScreen() {
 
           <input
             className="login-input"
-            type="email"
-            placeholder="E-mailadres"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="text"
+            placeholder="Gebruikersnaam"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             required
             autoFocus
-            autoComplete="email"
+            autoComplete="username"
           />
 
           <input
