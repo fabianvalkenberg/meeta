@@ -55,37 +55,39 @@ export function ConversationHistory({ isOpen, onClose, onLoadConversation }) {
   }
 
   return (
-    <div className={`panel-right ${isOpen ? 'panel-right--open' : ''}`} style={{ zIndex: 110 }}>
-      <div className="panel-right-header">
-        <h2 className="panel-right-title">Geschiedenis</h2>
-        <button className="panel-close-btn" onClick={onClose}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
-      </div>
+    <div className={`panel-left ${isOpen ? 'panel-left--open' : ''}`} style={{ zIndex: 110 }}>
+      <div className="panel-left-inner">
+        <div className="panel-left-header">
+          <h2 className="panel-left-title">Geschiedenis</h2>
+          <button className="panel-close-btn" onClick={onClose}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
 
-      <div className="history-list">
-        {isLoading ? (
-          <div className="panel-empty">Laden...</div>
-        ) : conversations.length === 0 ? (
-          <div className="panel-empty">Nog geen gesprekken opgeslagen</div>
-        ) : (
-          conversations.map((conv) => (
-            <button
-              key={conv.id}
-              className="history-item"
-              onClick={() => handleLoad(conv.id)}
-            >
-              <span className="history-title">{conv.title || 'Zonder titel'}</span>
-              <span className="history-date">{formatDate(conv.started_at)}</span>
-              {conv.block_count > 0 && (
-                <span className="history-badge">{conv.block_count} inzichten</span>
-              )}
-            </button>
-          ))
-        )}
+        <div className="history-list">
+          {isLoading ? (
+            <div className="panel-empty">Laden...</div>
+          ) : conversations.length === 0 ? (
+            <div className="panel-empty">Nog geen gesprekken opgeslagen</div>
+          ) : (
+            conversations.map((conv) => (
+              <button
+                key={conv.id}
+                className="history-item"
+                onClick={() => handleLoad(conv.id)}
+              >
+                <span className="history-title">{conv.title || 'Zonder titel'}</span>
+                <span className="history-date">{formatDate(conv.started_at)}</span>
+                {conv.block_count > 0 && (
+                  <span className="history-badge">{conv.block_count} inzichten</span>
+                )}
+              </button>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );

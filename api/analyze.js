@@ -157,6 +157,12 @@ Het is OK om een lege blocks array terug te geven als er niets nieuws te melden 
     }
 
     const message = await response.json();
+
+    if (!message.content || !message.content[0] || !message.content[0].text) {
+      console.error('Unexpected API response structure:', JSON.stringify(message).slice(0, 500));
+      return res.status(502).json({ error: 'Unexpected response from AI API' });
+    }
+
     let content = message.content[0].text.trim();
 
     // Strip markdown code blocks if Claude wraps the JSON
@@ -164,7 +170,13 @@ Het is OK om een lege blocks array terug te geven als er niets nieuws te melden 
       content = content.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
     }
 
-    const parsed = JSON.parse(content);
+    let parsed;
+    try {
+      parsed = JSON.parse(content);
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError.message, 'Content:', content.slice(0, 500));
+      return res.status(502).json({ error: 'AI returned invalid JSON' });
+    }
 
     // Increment usage counter (atomic upsert)
     await sql`
@@ -211,6 +223,7 @@ Het is OK om een lege blocks array terug te geven als er niets nieuws te melden 
     });
   } catch (error) {
     console.error('Analysis error:', error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    const msg = error.message || 'Internal server error';
+    res.status(500).json({ error: `Analyse mislukt: ${msg}` });
   }
 }

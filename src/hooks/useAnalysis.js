@@ -108,7 +108,8 @@ export function useAnalysis(transcript, isListening, onUsageUpdate) {
       }
 
       if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || `Server error: ${response.status}`);
       }
 
       const data = await response.json();
