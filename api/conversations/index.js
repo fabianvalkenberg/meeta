@@ -11,7 +11,8 @@ export default async function handler(req, res) {
     try {
       const rows = await sql`
         SELECT id, title, started_at, ended_at,
-          COALESCE(jsonb_array_length(blocks), 0) as block_count
+          COALESCE(jsonb_array_length(blocks), 0) as block_count,
+          meta->>'samenvatting' as summary
         FROM conversations
         WHERE user_id = ${user.id}
         ORDER BY started_at DESC

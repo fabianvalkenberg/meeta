@@ -60,6 +60,7 @@ export function useAnalysis(transcript, isListening, onUsageUpdate) {
   }, []);
 
   const analyzeText = useCallback(async (text) => {
+    const isPasted = !!text;
     const fullTranscript = (text || transcriptRef.current).trim();
 
     if (!fullTranscript || limitReached) {
@@ -67,7 +68,7 @@ export function useAnalysis(transcript, isListening, onUsageUpdate) {
     }
 
     let newTranscript;
-    if (text) {
+    if (isPasted) {
       newTranscript = fullTranscript;
       lastAnalyzedLengthRef.current = 0;
       previousSummaryRef.current = '';
@@ -81,6 +82,26 @@ export function useAnalysis(transcript, isListening, onUsageUpdate) {
     setIsAnalyzing(true);
     setError(null);
 
+    // For pasted transcripts, create a conversation first so it gets saved
+    let pastedConvId = null;
+    if (isPasted && !conversationIdRef.current) {
+      try {
+        const convRes = await fetch('/api/conversations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        });
+        if (convRes.ok) {
+          const convData = await convRes.json();
+          pastedConvId = convData.conversation.id;
+        }
+      } catch (err) {
+        console.error('Create conversation for paste error:', err);
+      }
+    }
+
+    const activeConvId = conversationIdRef.current || pastedConvId;
+
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
@@ -89,7 +110,7 @@ export function useAnalysis(transcript, isListening, onUsageUpdate) {
           newTranscript,
           previousSummary: previousSummaryRef.current || null,
           existingBlocks: blocksRef.current,
-          conversationId: conversationIdRef.current,
+          conversationId: activeConvId,
         }),
       });
 
@@ -162,6 +183,32 @@ export function useAnalysis(transcript, isListening, onUsageUpdate) {
         setMetaHistory((prev) => [...prev, { ...data.meta, timestamp: Date.now() }]);
         if (data.meta.samenvatting) {
           previousSummaryRef.current = data.meta.samenvatting;
+        }
+      }
+
+      // For pasted transcripts, save the full state and close the conversation
+      if (isPasted && activeConvId && data.blocks) {
+        try {
+          // Merge the returned blocks into a final set
+          const finalBlocks = [];
+          for (const incoming of data.blocks) {
+            if (incoming.action === 'add') {
+              const { action, ...blockData } = incoming;
+              finalBlocks.push(blockData);
+            }
+          }
+
+          await fetch(`/api/conversations/${activeConvId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              transcript: fullTranscript,
+              blocks: finalBlocks,
+              ended_at: new Date().toISOString(),
+            }),
+          });
+        } catch (err) {
+          console.error('Save pasted conversation error:', err);
         }
       }
     } catch (err) {

@@ -81,6 +81,9 @@ export function ConversationHistory({ isOpen, onClose, onLoadConversation }) {
               >
                 <span className="history-title">{conv.title || 'Zonder titel'}</span>
                 <span className="history-date">{formatDate(conv.started_at)}</span>
+                {conv.summary && (
+                  <span className="history-summary">{conv.summary}</span>
+                )}
                 {conv.block_count > 0 && (
                   <span className="history-badge">{conv.block_count} inzichten</span>
                 )}
