@@ -273,14 +273,6 @@ export default function App() {
         onLoadConversation={handleLoadConversation}
       />
 
-      {/* Panel overlays for mobile */}
-      {(showTranscript || showMeta || showHistory) && (
-        <div
-          className="panel-backdrop"
-          onClick={() => { setShowTranscript(false); setShowMeta(false); setShowHistory(false); }}
-        />
-      )}
-
       {selectedBlock && (
         <InsightDetail
           block={selectedBlock}
