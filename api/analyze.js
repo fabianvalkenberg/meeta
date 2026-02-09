@@ -1,3 +1,6 @@
+import { requireAuth } from './_lib/auth.js';
+import { getDb } from './_lib/db.js';
+
 export const config = {
   maxDuration: 60,
 };
@@ -7,8 +10,25 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Auth check
+  const user = await requireAuth(req, res);
+  if (!user) return;
+
+  const sql = getDb();
+
+  // Usage limit check
+  const usageRows = await sql`SELECT count FROM usage_daily WHERE user_id = ${user.id} AND date = CURRENT_DATE`;
+  const usedToday = usageRows.length > 0 ? usageRows[0].count : 0;
+
+  if (usedToday >= user.daily_limit) {
+    return res.status(429).json({
+      error: 'Dagelijks limiet bereikt',
+      usage: { used: usedToday, limit: user.daily_limit },
+    });
+  }
+
   try {
-    const { newTranscript, previousSummary, existingBlocks } = req.body;
+    const { newTranscript, previousSummary, existingBlocks, conversationId } = req.body;
 
     if (!newTranscript || newTranscript.trim().length === 0) {
       return res.status(400).json({ error: 'Transcript is required' });
@@ -146,7 +166,49 @@ Het is OK om een lege blocks array terug te geven als er niets nieuws te melden 
 
     const parsed = JSON.parse(content);
 
-    res.json(parsed);
+    // Increment usage counter (atomic upsert)
+    await sql`
+      INSERT INTO usage_daily (user_id, date, count)
+      VALUES (${user.id}, CURRENT_DATE, 1)
+      ON CONFLICT (user_id, date)
+      DO UPDATE SET count = usage_daily.count + 1
+    `;
+
+    const newUsed = usedToday + 1;
+
+    // Save to conversation if conversationId provided
+    if (conversationId) {
+      try {
+        // We save the current state of blocks after the frontend merges them
+        // For now, save the raw API response blocks + meta
+        await sql`
+          UPDATE conversations
+          SET meta = ${JSON.stringify(parsed.meta || null)}::jsonb
+          WHERE id = ${conversationId} AND user_id = ${user.id}
+        `;
+
+        // Auto-generate title from first block if title is still default
+        if (parsed.blocks && parsed.blocks.length > 0) {
+          const firstAdd = parsed.blocks.find(b => b.action === 'add');
+          if (firstAdd) {
+            await sql`
+              UPDATE conversations
+              SET title = ${firstAdd.title}
+              WHERE id = ${conversationId} AND user_id = ${user.id} AND title = 'Nieuw gesprek'
+            `;
+          }
+        }
+      } catch (saveError) {
+        console.error('Save to conversation error:', saveError);
+        // Don't fail the whole request if save fails
+      }
+    }
+
+    // Return analysis + usage info
+    res.json({
+      ...parsed,
+      usage: { used: newUsed, limit: user.daily_limit },
+    });
   } catch (error) {
     console.error('Analysis error:', error);
     res.status(500).json({ error: error.message || 'Internal server error' });

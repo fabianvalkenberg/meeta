@@ -1,12 +1,18 @@
 import { useState } from 'react';
+import { useAuth } from './contexts/AuthContext';
 import { useSpeechRecognition } from './hooks/useSpeechRecognition';
 import { useAnalysis } from './hooks/useAnalysis';
 import { TranscriptPanel } from './components/TranscriptPanel';
 import { InsightCard } from './components/InsightCard';
 import { InsightDetail } from './components/InsightDetail';
 import { MetaPanel } from './components/MetaPanel';
+import { LoginScreen } from './components/LoginScreen';
+import { ConversationHistory } from './components/ConversationHistory';
+import { UsageBadge } from './components/UsageBadge';
 
 export default function App() {
+  const { user, isLoading, logout, updateUsage } = useAuth();
+
   const {
     isListening,
     transcript,
@@ -16,7 +22,7 @@ export default function App() {
     stopListening,
   } = useSpeechRecognition();
 
-  const { blocks, meta, metaHistory, isAnalyzing, error, analyzeText, countdown } = useAnalysis(transcript, isListening);
+  const { blocks, meta, metaHistory, isAnalyzing, error, analyzeText, countdown, limitReached, loadConversation } = useAnalysis(transcript, isListening, updateUsage);
   const [pastedText, setPastedText] = useState('');
   const [showPasteArea, setShowPasteArea] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState(null);
@@ -24,6 +30,24 @@ export default function App() {
   const [selectedCardIndex, setSelectedCardIndex] = useState(0);
   const [showTranscript, setShowTranscript] = useState(false);
   const [showMeta, setShowMeta] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [viewingConversation, setViewingConversation] = useState(null);
+
+  // Show loading spinner while checking auth
+  if (isLoading) {
+    return (
+      <div className="app">
+        <div className="auth-loading">
+          <div className="spinner" />
+        </div>
+      </div>
+    );
+  }
+
+  // Show login screen if not authenticated
+  if (!user) {
+    return <LoginScreen />;
+  }
 
   async function handlePasteAnalyze() {
     const text = pastedText.trim();
@@ -33,7 +57,17 @@ export default function App() {
     setPastedText('');
   }
 
-  const displayTranscript = pastedText || transcript;
+  function handleLoadConversation(conversation) {
+    loadConversation(conversation);
+    setViewingConversation(conversation);
+  }
+
+  function handleBackToLive() {
+    setViewingConversation(null);
+    loadConversation({ blocks: [], meta: null });
+  }
+
+  const displayTranscript = viewingConversation?.transcript || pastedText || transcript;
 
   if (!isSupported) {
     return (
@@ -53,26 +87,57 @@ export default function App() {
     <div className="app">
       {/* Top bar: toggle buttons + centered logo */}
       <header className="topbar">
-        <button
-          className={`panel-toggle ${showTranscript ? 'panel-toggle--active' : ''}`}
-          onClick={() => setShowTranscript(!showTranscript)}
-          title="Transcript"
-        >
-          <TranscriptIcon />
-        </button>
+        <div className="topbar-left">
+          <button
+            className={`panel-toggle ${showTranscript ? 'panel-toggle--active' : ''}`}
+            onClick={() => setShowTranscript(!showTranscript)}
+            title="Transcript"
+          >
+            <TranscriptIcon />
+          </button>
+          <button
+            className={`panel-toggle ${showHistory ? 'panel-toggle--active' : ''}`}
+            onClick={() => setShowHistory(!showHistory)}
+            title="Geschiedenis"
+          >
+            <HistoryIcon />
+          </button>
+        </div>
 
         <div className="topbar-center">
           <MeetaLogo className="logo-img-large" />
         </div>
 
-        <button
-          className={`panel-toggle ${showMeta ? 'panel-toggle--active' : ''}`}
-          onClick={() => setShowMeta(!showMeta)}
-          title="Gespreksoverzicht"
-        >
-          <MetaIcon />
-        </button>
+        <div className="topbar-right">
+          <UsageBadge />
+          <button
+            className={`panel-toggle ${showMeta ? 'panel-toggle--active' : ''}`}
+            onClick={() => setShowMeta(!showMeta)}
+            title="Gespreksoverzicht"
+          >
+            <MetaIcon />
+          </button>
+          <button
+            className="panel-toggle"
+            onClick={logout}
+            title="Uitloggen"
+          >
+            <LogoutIcon />
+          </button>
+        </div>
       </header>
+
+      {/* Viewing saved conversation banner */}
+      {viewingConversation && (
+        <div className="viewing-banner">
+          <span className="viewing-banner-text">
+            Je bekijkt: <strong>{viewingConversation.title || 'Zonder titel'}</strong>
+          </span>
+          <button className="btn viewing-banner-btn" onClick={handleBackToLive}>
+            ← Terug naar live
+          </button>
+        </div>
+      )}
 
       {/* Three-zone layout */}
       <div className="layout-body">
@@ -89,77 +154,85 @@ export default function App() {
               </button>
             </div>
 
-            <div className="sidebar-controls">
-              <div className="controls-row">
-                <button
-                  className="btn btn-paste-toggle"
-                  onClick={() => setShowPasteArea(!showPasteArea)}
-                  title="Plak transcript"
-                >
-                  <PasteIcon />
-                </button>
-                {isListening ? (
-                  <button className="btn btn-stop" onClick={stopListening}>
-                    <StopIcon /> Stop
-                  </button>
-                ) : (
-                  <button className="btn btn-start" onClick={startListening}>
-                    <MicIcon /> Start
-                  </button>
-                )}
-              </div>
-
-              {showPasteArea && (
-                <div className="paste-area">
-                  <textarea
-                    className="paste-textarea"
-                    placeholder="Plak hier een transcript..."
-                    value={pastedText}
-                    onChange={(e) => setPastedText(e.target.value)}
-                    rows={5}
-                  />
-                  <div className="paste-actions">
+            {!viewingConversation && (
+              <>
+                <div className="sidebar-controls">
+                  <div className="controls-row">
                     <button
-                      className="btn btn-start"
-                      onClick={handlePasteAnalyze}
-                      disabled={!pastedText.trim() || isAnalyzing}
+                      className="btn btn-paste-toggle"
+                      onClick={() => setShowPasteArea(!showPasteArea)}
+                      title="Plak transcript"
                     >
-                      {isAnalyzing ? 'Analyseren...' : 'Analyseer'}
+                      <PasteIcon />
                     </button>
-                    <button
-                      className="btn"
-                      onClick={() => { setPastedText(''); setShowPasteArea(false); }}
-                    >
-                      Annuleer
-                    </button>
+                    {isListening ? (
+                      <button className="btn btn-stop" onClick={stopListening}>
+                        <StopIcon /> Stop
+                      </button>
+                    ) : (
+                      <button className="btn btn-start" onClick={startListening} disabled={limitReached}>
+                        <MicIcon /> Start
+                      </button>
+                    )}
                   </div>
-                </div>
-              )}
-            </div>
 
-            {isListening && (
-              <div className="countdown-bar">
-                <div
-                  className="countdown-progress"
-                  style={{ width: `${((45 - countdown) / 45) * 100}%` }}
-                />
-                <span className="countdown-text">
-                  {isAnalyzing ? 'Analyseren...' : `Analyse over ${countdown}s`}
-                </span>
-              </div>
+                  {showPasteArea && (
+                    <div className="paste-area">
+                      <textarea
+                        className="paste-textarea"
+                        placeholder="Plak hier een transcript..."
+                        value={pastedText}
+                        onChange={(e) => setPastedText(e.target.value)}
+                        rows={5}
+                      />
+                      <div className="paste-actions">
+                        <button
+                          className="btn btn-start"
+                          onClick={handlePasteAnalyze}
+                          disabled={!pastedText.trim() || isAnalyzing || limitReached}
+                        >
+                          {isAnalyzing ? 'Analyseren...' : 'Analyseer'}
+                        </button>
+                        <button
+                          className="btn"
+                          onClick={() => { setPastedText(''); setShowPasteArea(false); }}
+                        >
+                          Annuleer
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {isListening && (
+                  <div className="countdown-bar">
+                    <div
+                      className="countdown-progress"
+                      style={{ width: `${((60 - countdown) / 60) * 100}%` }}
+                    />
+                    <span className="countdown-text">
+                      {isAnalyzing ? 'Analyseren...' : `Analyse over ${countdown}s`}
+                    </span>
+                  </div>
+                )}
+              </>
             )}
 
             <TranscriptPanel
               transcript={displayTranscript}
-              interimText={interimText}
-              isListening={isListening}
+              interimText={viewingConversation ? '' : interimText}
+              isListening={viewingConversation ? false : isListening}
             />
           </div>
         </aside>
 
         {/* Main content — cards */}
         <main className="main">
-          {error && <div className="error-banner">{error}</div>}
+          {error && (
+            <div className={`error-banner ${limitReached ? 'error-banner--limit' : ''}`}>
+              {error}
+            </div>
+          )}
 
           {isAnalyzing && (
             <div className="analyzing-loader">
@@ -193,11 +266,18 @@ export default function App() {
         />
       </div>
 
+      {/* Conversation History panel */}
+      <ConversationHistory
+        isOpen={showHistory}
+        onClose={() => setShowHistory(false)}
+        onLoadConversation={handleLoadConversation}
+      />
+
       {/* Panel overlays for mobile */}
-      {(showTranscript || showMeta) && (
+      {(showTranscript || showMeta || showHistory) && (
         <div
           className="panel-backdrop"
-          onClick={() => { setShowTranscript(false); setShowMeta(false); }}
+          onClick={() => { setShowTranscript(false); setShowMeta(false); setShowHistory(false); }}
         />
       )}
 
@@ -271,6 +351,26 @@ function MetaIcon() {
       <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
       <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
       <line x1="12" y1="22.08" x2="12" y2="12" />
+    </svg>
+  );
+}
+
+function HistoryIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 3v5h5" />
+      <path d="M3.05 13A9 9 0 1 0 6 5.3L3 8" />
+      <path d="M12 7v5l4 2" />
+    </svg>
+  );
+}
+
+function LogoutIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
     </svg>
   );
 }

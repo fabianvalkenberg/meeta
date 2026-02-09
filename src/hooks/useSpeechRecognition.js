@@ -4,7 +4,6 @@ export function useSpeechRecognition() {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [interimText, setInterimText] = useState('');
-  const [language, setLanguage] = useState('nl-NL');
   const [isSupported, setIsSupported] = useState(true);
   const recognitionRef = useRef(null);
   const transcriptRef = useRef('');
@@ -23,7 +22,7 @@ export function useSpeechRecognition() {
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = language;
+    recognition.lang = 'nl-NL';
 
     recognition.onresult = (event) => {
       let finalTranscript = '';
@@ -53,7 +52,6 @@ export function useSpeechRecognition() {
     };
 
     recognition.onend = () => {
-      // Restart if still supposed to be listening
       if (recognitionRef.current) {
         try {
           recognition.start();
@@ -66,7 +64,7 @@ export function useSpeechRecognition() {
     recognitionRef.current = recognition;
     recognition.start();
     setIsListening(true);
-  }, [language]);
+  }, []);
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current) {
@@ -78,33 +76,12 @@ export function useSpeechRecognition() {
     }
   }, []);
 
-  const clearTranscript = useCallback(() => {
-    transcriptRef.current = '';
-    setTranscript('');
-    setInterimText('');
-  }, []);
-
-  const switchLanguage = useCallback((lang) => {
-    const wasListening = isListening;
-    if (wasListening) {
-      stopListening();
-    }
-    setLanguage(lang);
-    // Restart with new language after a brief delay
-    if (wasListening) {
-      setTimeout(() => startListening(), 100);
-    }
-  }, [isListening, stopListening, startListening]);
-
   return {
     isListening,
     transcript,
     interimText,
-    language,
     isSupported,
     startListening,
     stopListening,
-    clearTranscript,
-    switchLanguage,
   };
 }

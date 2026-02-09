@@ -93,7 +93,6 @@ body {
   color: var(--text-muted);
   cursor: pointer;
   transition: all 0.25s ease;
-  z-index: 51;
 }
 
 .panel-toggle:hover {
@@ -1285,6 +1284,243 @@ body {
 ::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 2px;
+}
+
+/* ==========================================================
+   LOGIN SCREEN
+   ========================================================== */
+.login-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--bg);
+  padding: 2rem;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.login-logo {
+  height: 52px;
+  width: auto;
+  margin-bottom: 2.5rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.login-input {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: 'Alegreya', serif;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(45, 93, 161, 0.1);
+}
+
+.login-input::placeholder {
+  color: #c5bfb8;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-family: 'Alegreya', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 0.25rem;
+}
+
+.login-btn:hover:not(:disabled) {
+  background: #244d8a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(45, 93, 161, 0.25);
+}
+
+.login-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.login-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.login-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  color: #b91c1c;
+  font-size: 0.85rem;
+  animation: fadeSlideDown 0.3s ease-out;
+}
+
+/* Auth loading state */
+.auth-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.auth-loading .spinner {
+  width: 28px;
+  height: 28px;
+}
+
+/* ==========================================================
+   TOPBAR LEFT/RIGHT GROUPS
+   ========================================================== */
+.topbar-left,
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  z-index: 51;
+}
+
+/* ==========================================================
+   USAGE BADGE
+   ========================================================== */
+.usage-badge {
+  display: flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.04);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.usage-badge--warning {
+  background: rgba(212, 87, 59, 0.1);
+  color: #D4573B;
+}
+
+.usage-count {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================
+   CONVERSATION HISTORY PANEL
+   ========================================================== */
+.history-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.history-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  padding: 0.85rem 1.25rem;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font-family: 'Alegreya', serif;
+  transition: background 0.2s ease;
+  width: 100%;
+}
+
+.history-item:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.history-item:active {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.history-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.history-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.history-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.45rem;
+  border-radius: 10px;
+  background: rgba(45, 93, 161, 0.08);
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-top: 0.15rem;
+}
+
+/* ==========================================================
+   VIEWING BANNER — when viewing a saved conversation
+   ========================================================== */
+.viewing-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1.5rem;
+  background: linear-gradient(135deg, #FFFDE7 0%, #FFF9C4 100%);
+  border-bottom: 1px solid #F0E68C;
+  flex-shrink: 0;
+  animation: fadeSlideDown 0.3s ease-out;
+}
+
+.viewing-banner-text {
+  font-size: 0.85rem;
+  color: #5D4E37;
+}
+
+.viewing-banner-btn {
+  font-size: 0.8rem;
+  padding: 0.3rem 0.7rem;
+  background: rgba(0, 0, 0, 0.06);
+  border-color: transparent;
+  color: #5D4E37;
+}
+
+.viewing-banner-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Error banner — limit reached variant */
+.error-banner--limit {
+  background: #FFF3E0;
+  border-color: #FFE0B2;
+  color: #E65100;
 }
 
 /* ==========================================================
