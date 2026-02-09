@@ -135,61 +135,74 @@ Het is OK om een lege blocks array terug te geven als er niets nieuws te melden 
       return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
     }
 
-    // Use assistant prefill to force JSON output
-    const assistantPrefill = '{"blocks":[';
-
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
+    // Call Anthropic API with retry on JSON parse failure
+    async function callClaude(attempt = 1) {
+      const requestBody = {
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 4000,
+        max_tokens: 8000,
         system: systemPrompt,
-        messages: [
-          { role: 'user', content: userMessage },
-          { role: 'assistant', content: assistantPrefill },
-        ],
-      }),
-    });
+        messages: [{ role: 'user', content: userMessage }],
+      };
 
-    if (!response.ok) {
-      const errorBody = await response.text();
-      console.error('Anthropic API error:', response.status, errorBody);
-      return res.status(502).json({ error: `Anthropic API error: ${response.status}` });
-    }
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify(requestBody),
+      });
 
-    const message = await response.json();
+      if (!response.ok) {
+        const errorBody = await response.text();
+        console.error(`Anthropic API error (attempt ${attempt}):`, response.status, errorBody);
+        throw new Error(`Anthropic API error: ${response.status}`);
+      }
 
-    if (!message.content || !message.content[0] || !message.content[0].text) {
-      console.error('Unexpected API response structure:', JSON.stringify(message).slice(0, 500));
-      return res.status(502).json({ error: 'Unexpected response from AI API' });
-    }
+      const message = await response.json();
 
-    // Reconstruct JSON: prefill + model completion
-    let content = (assistantPrefill + message.content[0].text).trim();
+      if (!message.content || !message.content[0] || !message.content[0].text) {
+        console.error('Unexpected API response:', JSON.stringify(message).slice(0, 500));
+        throw new Error('Unexpected response from AI API');
+      }
 
-    // Strip markdown code blocks if Claude wraps the JSON
-    if (content.startsWith('```')) {
-      content = content.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
-    }
+      // Check if output was truncated
+      if (message.stop_reason === 'max_tokens') {
+        console.warn(`Output truncated (attempt ${attempt}), stop_reason: max_tokens`);
+      }
 
-    // Extract JSON object — find first { and last }
-    const firstBrace = content.indexOf('{');
-    const lastBrace = content.lastIndexOf('}');
-    if (firstBrace !== -1 && lastBrace > firstBrace) {
-      content = content.slice(firstBrace, lastBrace + 1);
+      let content = message.content[0].text.trim();
+
+      // Strip markdown code blocks
+      if (content.startsWith('```')) {
+        content = content.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+      }
+
+      // Extract JSON object — find first { and last }
+      const firstBrace = content.indexOf('{');
+      const lastBrace = content.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace > firstBrace) {
+        content = content.slice(firstBrace, lastBrace + 1);
+      }
+
+      try {
+        return JSON.parse(content);
+      } catch (parseError) {
+        console.error(`JSON parse error (attempt ${attempt}):`, parseError.message, 'Content:', content.slice(0, 300));
+        if (attempt < 2) {
+          console.log('Retrying API call...');
+          return callClaude(attempt + 1);
+        }
+        throw new Error('AI returned invalid JSON after retries');
+      }
     }
 
     let parsed;
     try {
-      parsed = JSON.parse(content);
-    } catch (parseError) {
-      console.error('JSON parse error:', parseError.message, 'Content:', content.slice(0, 500));
-      return res.status(502).json({ error: 'AI returned invalid JSON' });
+      parsed = await callClaude();
+    } catch (apiError) {
+      return res.status(502).json({ error: apiError.message });
     }
 
     // Ensure expected structure
