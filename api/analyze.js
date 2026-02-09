@@ -143,7 +143,7 @@ Het is OK om een lege blocks array terug te geven als er niets nieuws te melden 
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-20250414',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 4000,
         system: systemPrompt,
         messages: [{ role: 'user', content: userMessage }],
