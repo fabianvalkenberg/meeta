@@ -23,6 +23,7 @@ export function InsightCard({ block, index, onClick }) {
   const cardRef = useRef(null);
   const palette = COLOR_ROTATION[index % COLOR_ROTATION.length];
   const hasInspirations = block.inspirations && block.inspirations.length > 0;
+  const strength = block.strength || 1;
 
   function handleClick() {
     if (!hasInspirations) return;
@@ -30,21 +31,38 @@ export function InsightCard({ block, index, onClick }) {
     onClick(block, rect);
   }
 
+  const cardClasses = [
+    'insight-card',
+    hasInspirations ? 'insight-card--clickable' : '',
+    block._justAdded ? 'insight-card--new' : '',
+    block._justUpdated ? 'insight-card--updated' : '',
+  ].filter(Boolean).join(' ');
+
   return (
     <div
       ref={cardRef}
-      className={`insight-card ${hasInspirations ? 'insight-card--clickable' : ''}`}
+      className={cardClasses}
       style={{
         backgroundColor: palette.bg,
         color: palette.text,
-        animationDelay: `${index * 0.12}s`,
+        animationDelay: block._justAdded ? `${index * 0.12}s` : '0s',
       }}
       onClick={handleClick}
     >
       <div className="insight-card-top">
-        <span className="insight-type">
-          {TYPE_LABELS[block.type] || block.type}
-        </span>
+        <div className="insight-card-header">
+          <span className="insight-type">
+            {TYPE_LABELS[block.type] || block.type}
+          </span>
+          <div className="insight-strength" title={`Sterkte: ${strength}/5`}>
+            {[1, 2, 3, 4, 5].map((level) => (
+              <span
+                key={level}
+                className={`strength-dot ${level <= strength ? 'strength-dot--active' : ''}`}
+              />
+            ))}
+          </div>
+        </div>
         <h3 className="insight-title">{block.title}</h3>
       </div>
       <p className="insight-summary">{block.summary}</p>

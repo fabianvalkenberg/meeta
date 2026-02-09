@@ -791,7 +791,7 @@ body {
 }
 
 /* ==========================================================
-   INSIGHT CARD — with "materialise" entrance animation
+   INSIGHT CARD — evolving cards with entrance + update animations
    ========================================================== */
 .insight-card {
   padding: 2rem 2.25rem;
@@ -799,11 +799,34 @@ body {
   flex-direction: column;
   justify-content: space-between;
   min-height: 280px;
-  animation: cardPlop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: default;
   position: relative;
   overflow: hidden;
+}
+
+/* Only new cards get the plop entrance */
+.insight-card--new {
+  animation: cardPlop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Updated cards get a subtle glow pulse */
+.insight-card--updated {
+  animation: cardUpdate 1s ease-out both;
+}
+
+@keyframes cardUpdate {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.6);
+  }
+  30% {
+    box-shadow: 0 0 20px 4px rgba(255, 255, 255, 0.4);
+    transform: scale(1.015);
+  }
+  100% {
+    box-shadow: none;
+    transform: scale(1);
+  }
 }
 
 .insight-card::before {
@@ -837,8 +860,8 @@ body {
   }
 }
 
-/* Shimmer sweep after the plop */
-.insight-card::after {
+/* Shimmer sweep only for new cards */
+.insight-card--new::after {
   content: '';
   position: absolute;
   top: 0;
@@ -871,6 +894,13 @@ body {
   position: relative;
 }
 
+.insight-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
 .insight-type {
   display: inline-block;
   font-size: 0.75rem;
@@ -880,6 +910,43 @@ body {
   margin-bottom: 0.5rem;
   opacity: 0.6;
   position: relative;
+}
+
+/* Strength dots — visual strength indicator */
+.insight-strength {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  position: relative;
+}
+
+.strength-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.15;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.strength-dot--active {
+  opacity: 0.6;
+}
+
+.insight-card--updated .strength-dot--active {
+  animation: strengthPop 0.5s ease-out both;
+}
+
+.insight-card--updated .strength-dot--active:nth-child(2) { animation-delay: 0.05s; }
+.insight-card--updated .strength-dot--active:nth-child(3) { animation-delay: 0.1s; }
+.insight-card--updated .strength-dot--active:nth-child(4) { animation-delay: 0.15s; }
+.insight-card--updated .strength-dot--active:nth-child(5) { animation-delay: 0.2s; }
+
+@keyframes strengthPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.6); opacity: 0.9; }
+  100% { transform: scale(1); opacity: 0.6; }
 }
 
 .insight-title {

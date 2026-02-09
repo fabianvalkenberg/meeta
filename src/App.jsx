@@ -177,7 +177,7 @@ export default function App() {
           {blocks.length > 0 && (
             <div className="insights-grid">
               {blocks.map((block, i) => (
-                <InsightCard key={`${block.type}-${i}`} block={block} index={i} onClick={(b, rect) => { setSelectedBlock(b); setSelectedCardRect(rect); setSelectedCardIndex(i); }} />
+                <InsightCard key={block.id || `${block.type}-${i}`} block={block} index={i} onClick={(b, rect) => { setSelectedBlock(b); setSelectedCardRect(rect); setSelectedCardIndex(i); }} />
               ))}
             </div>
           )}
