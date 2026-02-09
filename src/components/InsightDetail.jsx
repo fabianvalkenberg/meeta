@@ -131,24 +131,24 @@ export function InsightDetail({ block, cardRect, cardIndex = 0, onClose }) {
                 {TYPE_LABELS[block.type] || block.type}
               </span>
               <h1 className="detail-title">{block.title}</h1>
-              <p className="detail-summary">{block.summary}</p>
             </div>
-
-            {block.quote && (
-              <blockquote className="detail-quote">
-                {block.quote}
-              </blockquote>
-            )}
 
             {block.questions && block.questions.length > 0 && (
               <div className="detail-section">
-                <h2 className="detail-section-title">Verdiepende vragen</h2>
                 <ul className="detail-questions">
                   {block.questions.map((q, i) => (
                     <li key={i}>{q}</li>
                   ))}
                 </ul>
               </div>
+            )}
+
+            <p className="detail-summary">{block.summary}</p>
+
+            {block.quote && (
+              <blockquote className="detail-quote">
+                {block.quote}
+              </blockquote>
             )}
 
             {block.inspirations && block.inspirations.length > 0 && (

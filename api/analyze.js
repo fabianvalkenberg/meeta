@@ -65,7 +65,7 @@ Dit is een iteratief proces: elke ~60 seconden ontvang je het NIEUWE stuk transc
 ## PER INZICHT (voor add en update)
 - "summary": Helder samenvatten WAT en WAAROM (2-3 zinnen)
 - "quote": 1 relevant letterlijk citaat uit het transcript
-- "questions": 2-3 kritische vragen die het gesprek kunnen verdiepen
+- "questions": 2-4 scherpe, kritische vragen die het gesprek echt verdiepen. Deze vragen moeten prikken, uitdagen en blinde vlekken blootleggen. Ze zijn het belangrijkste onderdeel van elk kaartje. Pas het aantal aan op de inhoud: soms zijn 2 voldoende, soms zijn er 3 of 4 nodig.
 - "inspirations": 2-3 citaten van bekende denkers/experts met quote, author, context
 - "sentiment": "positief" | "neutraal" | "gespannen" | "negatief"
 
@@ -90,7 +90,7 @@ BELANGRIJK: Reageer met ALLEEN raw JSON. Geen markdown, geen code blocks, geen b
       "title": "Korte titel",
       "summary": "Samenvatting",
       "quote": "Citaat uit transcript",
-      "questions": ["Vraag 1", "Vraag 2"],
+      "questions": ["Vraag 1", "Vraag 2", "Vraag 3"],
       "sentiment": "positief" | "neutraal" | "gespannen" | "negatief",
       "strength": 3,
       "inspirations": [

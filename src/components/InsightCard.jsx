@@ -65,18 +65,18 @@ export function InsightCard({ block, index, onClick }) {
         </div>
         <h3 className="insight-title">{block.title}</h3>
       </div>
-      <p className="insight-summary">{block.summary}</p>
-      {block.quote && (
-        <blockquote className="insight-quote">
-          {block.quote}
-        </blockquote>
-      )}
       {block.questions && block.questions.length > 0 && (
         <ul className="insight-questions">
           {block.questions.map((q, i) => (
             <li key={i}>{q}</li>
           ))}
         </ul>
+      )}
+      <p className="insight-summary">{block.summary}</p>
+      {block.quote && (
+        <blockquote className="insight-quote">
+          {block.quote}
+        </blockquote>
       )}
       {hasInspirations && (
         <div className="insight-inspirations-hint">
