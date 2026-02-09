@@ -159,7 +159,7 @@ export default function App() {
                 <div className="sidebar-controls">
                   <div className="controls-row">
                     <button
-                      className="btn btn-paste-toggle"
+                      className={`btn btn-paste-toggle ${showPasteArea ? 'btn-paste-toggle--active' : ''}`}
                       onClick={() => setShowPasteArea(!showPasteArea)}
                       title="Plak transcript"
                     >
@@ -170,22 +170,14 @@ export default function App() {
                         <StopIcon /> Stop
                       </button>
                     ) : (
-                      <button className="btn btn-start" onClick={startListening} disabled={limitReached}>
-                        <MicIcon /> Start
-                      </button>
+                      !showPasteArea && (
+                        <button className="btn btn-start" onClick={startListening} disabled={limitReached}>
+                          <MicIcon /> Start
+                        </button>
+                      )
                     )}
-                  </div>
-
-                  {showPasteArea && (
-                    <div className="paste-area">
-                      <textarea
-                        className="paste-textarea"
-                        placeholder="Plak hier een transcript..."
-                        value={pastedText}
-                        onChange={(e) => setPastedText(e.target.value)}
-                        rows={5}
-                      />
-                      <div className="paste-actions">
+                    {showPasteArea && (
+                      <>
                         <button
                           className="btn btn-start"
                           onClick={handlePasteAnalyze}
@@ -199,9 +191,9 @@ export default function App() {
                         >
                           Annuleer
                         </button>
-                      </div>
-                    </div>
-                  )}
+                      </>
+                    )}
+                  </div>
                 </div>
 
                 {isListening && (
@@ -218,11 +210,23 @@ export default function App() {
               </>
             )}
 
-            <TranscriptPanel
-              transcript={displayTranscript}
-              interimText={viewingConversation ? '' : interimText}
-              isListening={viewingConversation ? false : isListening}
-            />
+            {showPasteArea && !viewingConversation ? (
+              <div className="paste-area-full">
+                <textarea
+                  className="paste-textarea-full"
+                  placeholder="Plak hier een transcript..."
+                  value={pastedText}
+                  onChange={(e) => setPastedText(e.target.value)}
+                  autoFocus
+                />
+              </div>
+            ) : (
+              <TranscriptPanel
+                transcript={displayTranscript}
+                interimText={viewingConversation ? '' : interimText}
+                isListening={viewingConversation ? false : isListening}
+              />
+            )}
           </div>
         </aside>
 

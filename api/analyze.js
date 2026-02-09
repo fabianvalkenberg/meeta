@@ -135,6 +135,9 @@ Het is OK om een lege blocks array terug te geven als er niets nieuws te melden 
       return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
     }
 
+    // Use assistant prefill to force JSON output
+    const assistantPrefill = '{"blocks":[';
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -146,7 +149,10 @@ Het is OK om een lege blocks array terug te geven als er niets nieuws te melden 
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 4000,
         system: systemPrompt,
-        messages: [{ role: 'user', content: userMessage }],
+        messages: [
+          { role: 'user', content: userMessage },
+          { role: 'assistant', content: assistantPrefill },
+        ],
       }),
     });
 
@@ -163,7 +169,8 @@ Het is OK om een lege blocks array terug te geven als er niets nieuws te melden 
       return res.status(502).json({ error: 'Unexpected response from AI API' });
     }
 
-    let content = message.content[0].text.trim();
+    // Reconstruct JSON: prefill + model completion
+    let content = (assistantPrefill + message.content[0].text).trim();
 
     // Strip markdown code blocks if Claude wraps the JSON
     if (content.startsWith('```')) {
