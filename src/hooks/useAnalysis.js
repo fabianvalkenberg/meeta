@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 
 const API_URL = '/api/analyze';
-const AUTO_INTERVAL = 40;
+const AUTO_INTERVAL = 60;
 
 export function useAnalysis(transcript, isListening) {
   const [blocks, setBlocks] = useState([]);
@@ -10,7 +10,8 @@ export function useAnalysis(transcript, isListening) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState(null);
   const [countdown, setCountdown] = useState(AUTO_INTERVAL);
-  const lastAnalyzedRef = useRef('');
+  const lastAnalyzedLengthRef = useRef(0);
+  const previousSummaryRef = useRef('');
   const intervalRef = useRef(null);
   const countdownRef = useRef(null);
   const transcriptRef = useRef(transcript);
@@ -20,15 +21,26 @@ export function useAnalysis(transcript, isListening) {
   blocksRef.current = blocks;
 
   const analyzeText = useCallback(async (text) => {
-    const currentTranscript = (text || transcriptRef.current).trim();
+    const fullTranscript = (text || transcriptRef.current).trim();
 
-    if (!currentTranscript) {
+    if (!fullTranscript) {
       return;
     }
 
-    // Only skip duplicate check for auto-analysis (no explicit text passed)
-    if (!text && currentTranscript === lastAnalyzedRef.current) {
-      return;
+    // For auto-analysis: only send the new part since last analysis
+    // For manual paste: send everything (text is explicitly passed)
+    let newTranscript;
+    if (text) {
+      // Manual paste — send everything, reset delta tracking
+      newTranscript = fullTranscript;
+      lastAnalyzedLengthRef.current = 0;
+      previousSummaryRef.current = '';
+    } else {
+      // Auto-analysis — only the new delta
+      newTranscript = fullTranscript.slice(lastAnalyzedLengthRef.current).trim();
+      if (!newTranscript) {
+        return; // Nothing new to analyze
+      }
     }
 
     setIsAnalyzing(true);
@@ -39,7 +51,8 @@ export function useAnalysis(transcript, isListening) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          transcript: currentTranscript,
+          newTranscript,
+          previousSummary: previousSummaryRef.current || null,
           existingBlocks: blocksRef.current,
         }),
       });
@@ -56,29 +69,27 @@ export function useAnalysis(transcript, isListening) {
 
           for (const incoming of data.blocks) {
             if (incoming.action === 'add') {
-              // Add new block — mark as just added for animation
               const { action, ...blockData } = incoming;
               updated.push({ ...blockData, _justAdded: true });
             } else if (incoming.action === 'update') {
-              // Update existing block by id — mark as just updated for animation
               const idx = updated.findIndex((b) => b.id === incoming.id);
               if (idx !== -1) {
                 const { action, ...blockData } = incoming;
                 updated[idx] = { ...updated[idx], ...blockData, _justUpdated: true };
               }
             } else if (incoming.action === 'remove') {
-              // Remove block by id
               updated = updated.filter((b) => b.id !== incoming.id);
             }
           }
 
-          // Sort by strength (highest first) for better visual hierarchy
+          // Sort by strength (highest first)
           updated.sort((a, b) => (b.strength || 1) - (a.strength || 1));
 
           return updated;
         });
 
-        lastAnalyzedRef.current = currentTranscript;
+        // Track how far we've analyzed
+        lastAnalyzedLengthRef.current = fullTranscript.length;
 
         // Clear animation flags after a short delay
         setTimeout(() => {
@@ -97,6 +108,10 @@ export function useAnalysis(transcript, isListening) {
       if (data.meta) {
         setMeta(data.meta);
         setMetaHistory((prev) => [...prev, { ...data.meta, timestamp: Date.now() }]);
+        // Store the samenvatting as context for next round
+        if (data.meta.samenvatting) {
+          previousSummaryRef.current = data.meta.samenvatting;
+        }
       }
     } catch (err) {
       setError(err.message);

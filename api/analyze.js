@@ -8,15 +8,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { transcript, existingBlocks } = req.body;
+    const { newTranscript, previousSummary, existingBlocks } = req.body;
 
-    if (!transcript || transcript.trim().length === 0) {
+    if (!newTranscript || newTranscript.trim().length === 0) {
       return res.status(400).json({ error: 'Transcript is required' });
     }
 
-    const systemPrompt = `Je bent Meeta: een real-time gespreksanalist die meeluistert met gesprekken en **evoluerend** inzichten genereert. Je analyseert het VOLLEDIGE transcript van een lopend gesprek in het Nederlands.
+    const systemPrompt = `Je bent Meeta: een real-time gespreksanalist die meeluistert met gesprekken en evoluerend inzichten genereert. Je analyseert transcripten van lopende gesprekken in het Nederlands.
 
-Dit is een iteratief proces: elke ~40 seconden ontvang je het volledige transcript opnieuw, samen met de inzichtkaartjes die al bestaan. Jouw taak is om te beslissen welke kaartjes moeten worden TOEGEVOEGD, BIJGEWERKT of VERWIJDERD.
+Dit is een iteratief proces: elke ~60 seconden ontvang je het NIEUWE stuk transcript, samen met een samenvatting van wat er eerder is gezegd en de inzichtkaartjes die al bestaan. Jouw taak is om te beslissen welke kaartjes moeten worden TOEGEVOEGD, BIJGEWERKT of VERWIJDERD.
 
 ## KERNPRINCIPES
 - **Kwaliteit boven kwantiteit**: Voeg ALLEEN een nieuw kaartje toe als er echt een waardevol inzicht is. Het is volkomen OK om 0 nieuwe kaartjes te genereren.
@@ -55,7 +55,7 @@ Genereer altijd een overkoepelende analyse:
 - **energie**: Energieniveau ("hoog", "gemiddeld", "laag")
 - **taalpatronen**: 1-3 opvallende taalpatronen met "label" en "betekenis"
 - **nudge**: Eén zachte suggestie voor de gespreksleider (max 1-2 zinnen)
-- **samenvatting**: Kernachtige samenvatting van het hele gesprek tot nu toe (3-4 zinnen)
+- **samenvatting**: Kernachtige samenvatting van het HELE gesprek tot nu toe (3-4 zinnen). Dit wordt gebruikt als context voor de volgende analyse-ronde, dus wees volledig.
 - **acties**: 0-5 actie-items/beslissingen met "tekst" en "type" ("actie" | "beslissing")
 
 Reageer in het Nederlands.
@@ -91,7 +91,13 @@ BELANGRIJK: Reageer met ALLEEN raw JSON. Geen markdown, geen code blocks, geen b
 Bij "remove" hoef je alleen "id" en "action": "remove" mee te geven.
 Het is OK om een lege blocks array terug te geven als er niets nieuws te melden is.`;
 
-    let userMessage = `VOLLEDIG TRANSCRIPT:\n${transcript}`;
+    let userMessage = '';
+
+    if (previousSummary) {
+      userMessage += `SAMENVATTING VAN HET GESPREK TOT NU TOE:\n${previousSummary}\n\n`;
+    }
+
+    userMessage += `NIEUW STUK TRANSCRIPT:\n${newTranscript}`;
 
     if (existingBlocks && existingBlocks.length > 0) {
       const blocksJson = existingBlocks.map(b => ({
@@ -117,7 +123,7 @@ Het is OK om een lege blocks array terug te geven als er niets nieuws te melden 
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-haiku-4-20250414',
         max_tokens: 4000,
         system: systemPrompt,
         messages: [{ role: 'user', content: userMessage }],
