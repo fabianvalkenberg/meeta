@@ -37,28 +37,26 @@ export function LoginScreen() {
         <form className="login-form" onSubmit={handleSubmit}>
           {error && <div className="login-error">{error}</div>}
 
-          <div className="login-field">
-            <input
-              type="email"
-              placeholder="E-mailadres"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoFocus
-              autoComplete="email"
-            />
-          </div>
+          <input
+            className="login-input"
+            type="email"
+            placeholder="E-mailadres"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoFocus
+            autoComplete="email"
+          />
 
-          <div className="login-field">
-            <input
-              type="password"
-              placeholder="Wachtwoord"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-            />
-          </div>
+          <input
+            className="login-input"
+            type="password"
+            placeholder="Wachtwoord"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+          />
 
           <button type="submit" className="login-btn" disabled={isSubmitting}>
             {isSubmitting ? 'Bezig...' : 'Inloggen'}

@@ -8,14 +8,27 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body || {};
 
     if (!email || !password) {
       return res.status(400).json({ error: 'Email en wachtwoord zijn verplicht' });
     }
 
-    const sql = getDb();
-    const rows = await sql`SELECT id, email, display_name, password_hash, is_active FROM users WHERE email = ${email.toLowerCase().trim()}`;
+    let sql;
+    try {
+      sql = getDb();
+    } catch (dbErr) {
+      console.error('DB connection error:', dbErr);
+      return res.status(500).json({ error: 'Database verbinding mislukt' });
+    }
+
+    let rows;
+    try {
+      rows = await sql`SELECT id, email, display_name, password_hash, is_active FROM users WHERE email = ${email.toLowerCase().trim()}`;
+    } catch (queryErr) {
+      console.error('Query error:', queryErr);
+      return res.status(500).json({ error: 'Database query mislukt: ' + queryErr.message });
+    }
 
     if (rows.length === 0) {
       return res.status(401).json({ error: 'Onjuist e-mailadres of wachtwoord' });
@@ -44,6 +57,6 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Inloggen mislukt' });
+    res.status(500).json({ error: 'Inloggen mislukt: ' + error.message });
   }
 }
