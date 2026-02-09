@@ -703,7 +703,7 @@ body {
 
 .loader-favicon-wrap {
   position: relative;
-  width: 64px;
+  width: 80px;
   height: 64px;
   display: flex;
   align-items: center;
@@ -711,53 +711,57 @@ body {
 }
 
 .loader-favicon {
-  width: 48px;
+  width: 60px;
   height: 48px;
-  animation: faviconBreath 2.4s ease-in-out infinite;
+  animation: heartbeat 1.4s ease-in-out infinite;
 }
 
 .loader-favicon-pill {
-  animation: pillShimmer 2.4s ease-in-out infinite;
+  animation: pillShimmer 1.4s ease-in-out infinite;
 }
 
 .loader-favicon-m {
-  animation: mReveal 2.4s ease-in-out infinite;
+  animation: mReveal 1.4s ease-in-out infinite;
 }
 
-/* Pulsing rings that emanate outward from the favicon shape */
+/* Pulsing rings — SVG pill shape that emanates outward */
 .loader-ring {
   position: absolute;
-  inset: -6px;
-  border: 2px solid #EBFF00;
-  border-radius: 40%;
+  inset: 0;
   opacity: 0;
-  animation: ringPulse 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: ringPulse 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 .loader-ring--delayed {
-  animation-delay: 1.2s;
+  animation-delay: 1.4s;
 }
 
-@keyframes faviconBreath {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.06); }
+/* Heartbeat: two quick pulses like a real heartbeat */
+@keyframes heartbeat {
+  0%   { transform: scale(1); }
+  10%  { transform: scale(1.1); }
+  18%  { transform: scale(1); }
+  26%  { transform: scale(1.07); }
+  34%  { transform: scale(1); }
+  100% { transform: scale(1); }
 }
 
 @keyframes pillShimmer {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  0%, 34%, 100% { opacity: 1; }
+  10% { opacity: 0.8; }
+  26% { opacity: 0.85; }
 }
 
 @keyframes mReveal {
-  0%, 100% { opacity: 1; }
-  30% { opacity: 0.6; }
-  60% { opacity: 1; }
+  0%, 34%, 100% { opacity: 1; }
+  10% { opacity: 0.7; }
+  26% { opacity: 0.75; }
 }
 
 @keyframes ringPulse {
   0% {
-    transform: scale(0.8);
-    opacity: 0.6;
+    transform: scale(0.9);
+    opacity: 0.5;
   }
   100% {
     transform: scale(1.8);

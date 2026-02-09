@@ -170,6 +170,13 @@ Het is OK om een lege blocks array terug te geven als er niets nieuws te melden 
       content = content.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
     }
 
+    // Extract JSON object — find first { and last }
+    const firstBrace = content.indexOf('{');
+    const lastBrace = content.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace > firstBrace) {
+      content = content.slice(firstBrace, lastBrace + 1);
+    }
+
     let parsed;
     try {
       parsed = JSON.parse(content);
@@ -177,6 +184,10 @@ Het is OK om een lege blocks array terug te geven als er niets nieuws te melden 
       console.error('JSON parse error:', parseError.message, 'Content:', content.slice(0, 500));
       return res.status(502).json({ error: 'AI returned invalid JSON' });
     }
+
+    // Ensure expected structure
+    if (!parsed.blocks) parsed.blocks = [];
+    if (!parsed.meta) parsed.meta = {};
 
     // Increment usage counter (atomic upsert)
     await sql`
