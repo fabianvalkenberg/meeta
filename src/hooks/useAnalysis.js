@@ -140,28 +140,29 @@ export function useAnalysis(transcript, isListening, onUsageUpdate) {
         onUsageUpdate(data.usage);
       }
 
+      // Merge incoming blocks into current state
+      let mergedBlocks = blocksRef.current;
       if (data.blocks && Array.isArray(data.blocks)) {
-        setBlocks((prev) => {
-          let updated = [...prev];
+        let updated = [...blocksRef.current];
 
-          for (const incoming of data.blocks) {
-            if (incoming.action === 'add') {
+        for (const incoming of data.blocks) {
+          if (incoming.action === 'add') {
+            const { action, ...blockData } = incoming;
+            updated.push({ ...blockData, _justAdded: true });
+          } else if (incoming.action === 'update') {
+            const idx = updated.findIndex((b) => b.id === incoming.id);
+            if (idx !== -1) {
               const { action, ...blockData } = incoming;
-              updated.push({ ...blockData, _justAdded: true });
-            } else if (incoming.action === 'update') {
-              const idx = updated.findIndex((b) => b.id === incoming.id);
-              if (idx !== -1) {
-                const { action, ...blockData } = incoming;
-                updated[idx] = { ...updated[idx], ...blockData, _justUpdated: true };
-              }
-            } else if (incoming.action === 'remove') {
-              updated = updated.filter((b) => b.id !== incoming.id);
+              updated[idx] = { ...updated[idx], ...blockData, _justUpdated: true };
             }
+          } else if (incoming.action === 'remove') {
+            updated = updated.filter((b) => b.id !== incoming.id);
           }
+        }
 
-          updated.sort((a, b) => (b.strength || 1) - (a.strength || 1));
-          return updated;
-        });
+        updated.sort((a, b) => (b.strength || 1) - (a.strength || 1));
+        mergedBlocks = updated;
+        setBlocks(updated);
 
         lastAnalyzedLengthRef.current = fullTranscript.length;
 
@@ -186,29 +187,25 @@ export function useAnalysis(transcript, isListening, onUsageUpdate) {
         }
       }
 
-      // For pasted transcripts, save the full state and close the conversation
-      if (isPasted && activeConvId && data.blocks) {
+      // Save blocks + transcript to conversation after every analysis
+      if (activeConvId) {
         try {
-          // Merge the returned blocks into a final set
-          const finalBlocks = [];
-          for (const incoming of data.blocks) {
-            if (incoming.action === 'add') {
-              const { action, ...blockData } = incoming;
-              finalBlocks.push(blockData);
-            }
+          // Strip animation flags for storage
+          const cleanBlocks = mergedBlocks.map(({ _justAdded, _justUpdated, ...b }) => b);
+          const patchBody = {
+            transcript: fullTranscript,
+            blocks: cleanBlocks,
+          };
+          if (isPasted) {
+            patchBody.ended_at = new Date().toISOString();
           }
-
           await fetch(`/api/conversations/${activeConvId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              transcript: fullTranscript,
-              blocks: finalBlocks,
-              ended_at: new Date().toISOString(),
-            }),
+            body: JSON.stringify(patchBody),
           });
         } catch (err) {
-          console.error('Save pasted conversation error:', err);
+          console.error('Save conversation state error:', err);
         }
       }
     } catch (err) {
